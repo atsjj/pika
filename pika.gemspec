@@ -8,16 +8,13 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Steve Jabour', 'Michael Harrison']
   spec.email         = ['steve@jabour.me', 'mike.harrison@summit.com']
   spec.summary       = 'A gem based on the PSL pika library'
-
   spec.homepage      = 'http://github.com/atsjj/pika'
 
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
-
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
-
+  # spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  # spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
   spec.add_dependency 'bunny', '~> 2.9', '>= 2.9.2'
