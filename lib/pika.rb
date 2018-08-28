@@ -8,3 +8,5 @@ module Pika
     attr_accessor :env
   end
 end
+
+require 'pika/railtie' if defined?(Rails)
