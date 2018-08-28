@@ -8,6 +8,8 @@ module Pika
 
     initializer "pika.initialize", after: "dry.env.initialize" do
       load_initializer
+
+      Pika.instance = Pika::Runner.new
     end
 
     def load_initializer

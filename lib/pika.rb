@@ -5,7 +5,11 @@ require 'pika/runner'
 
 module Pika
   class << self
-    attr_accessor :env
+    attr_accessor :instance
+
+    def env
+      instance.container
+    end
   end
 end
 
