@@ -1,13 +1,17 @@
 require 'bunny'
 require 'dry/container'
-require 'env-config'
 require 'pathname'
 
 module Pika
   class Runner
+    extend Initializer
+    extend Dry::Core::ClassAttributes
+
+    param :amqp_url
+
     def connection
       @connection ||= -> {
-        c = Bunny.new(EnvConfig.required('amqp_url'))
+        c = Bunny.new(amqp_url)
         c.start
         c
       }.call

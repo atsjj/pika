@@ -1,9 +1,7 @@
 require 'bunny'
 require 'dry/core/class_attributes'
 require 'dry/core/inflector'
-require 'env-config'
 require 'oj'
-require 'pika/dataset'
 require 'pika/initializer'
 require 'pika/mode'
 
