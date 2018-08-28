@@ -1,13 +1,19 @@
 require 'bunny'
+require 'dry/configurable'
 require 'dry/container'
 require 'pathname'
 
 module Pika
   class Runner
     extend Initializer
+    extend Dry::Configurable
     extend Dry::Core::ClassAttributes
 
-    param :amqp_url
+    setting :amqp_url, '', reader: true
+
+    def amqp_url
+      self.class.amqp_url
+    end
 
     def connection
       @connection ||= -> {

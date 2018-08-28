@@ -2,11 +2,11 @@ require 'pika/runner'
 
 module Pika
   class Railtie < ::Rails::Railtie
-    railtie_name :pika
-
     config.eager_load_namespaces << ::Pika
 
-    initializer "pika.initialize" do
+    config.pika = Pika::Runner.config
+
+    initializer "pika.initialize", after: "dry.env.initialize" do
       load_initializer
     end
 
