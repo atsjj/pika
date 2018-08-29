@@ -1,6 +1,7 @@
 require 'pika/graph'
 require 'pika/hash'
 require 'pika/task'
+require 'pika/rfc'
 require 'pika/runner'
 
 module Pika
