@@ -2,27 +2,21 @@ require 'bunny'
 require 'dry/core/class_attributes'
 require 'dry/core/inflector'
 require 'oj'
+require 'pika/callbacks'
 require 'pika/initializer'
+require 'pika/log_subscriber'
+require 'pika/logging'
 require 'pika/mode'
 
 module Pika
   class Task
     extend Initializer
     extend Dry::Core::ClassAttributes
-
-    include ActiveSupport::Callbacks
-
-    define_callbacks :perform, :acknowledge, :reject
-
-    set_callback :acknowledge, :before, :before_acknowledge
-    set_callback :acknowledge, :after, :after_acknowledge
-    set_callback :perform, :before, :before_perform
-    set_callback :perform, :after, :after_perform
-    set_callback :reject, :before, :before_reject
-    set_callback :reject, :after, :after_reject
+    include Callbacks
+    include Logging
 
     defines :channel_name, :logger, :max_retries, :modes, :prefetch,
-            :queue_name, :requeue_on_rejection, :routing_key
+            :queue_name, :requeue_on_rejection, :routing_key, :verbose_event_logs
 
     class << self
       def default_name
@@ -46,6 +40,8 @@ module Pika
     requeue_on_rejection false
 
     routing_key nil
+
+    verbose_event_logs true
 
     option :connection, default: -> { nil }
 
@@ -98,10 +94,6 @@ module Pika
       end
     }
 
-    def instrument(*keys, &block)
-      ActiveSupport::Notifications.instrument(keys.concat(['task', name]).join('.'), &block)
-    end
-
     def requeue_on_rejection?
       requeue_on_rejection
     end
@@ -111,13 +103,13 @@ module Pika
     end
 
     def acknowledge
-      run_callbacks :acknowledge do
+      run_callbacks(:acknowledge) do
         channel.acknowledge(delivery_info.delivery_tag, false)
       end
     end
 
     def reject
-      run_callbacks :reject do
+      run_callbacks(:reject) do
         channel.reject(delivery_info.delivery_tag, requeue_on_rejection?)
       end
     end
@@ -127,9 +119,9 @@ module Pika
     end
 
     def call
-      run_callbacks :perform do
+      run_callbacks(:perform) do
         begin
-          instrument(:perform) { perform }
+          perform
           acknowledge
         rescue => exception
           reject
@@ -148,7 +140,7 @@ module Pika
     end
 
     def subscribe
-      instrument(:subscribe) do
+      run_callbacks(:subscribe) do
         if modes.rx?
           queue.subscribe(manual_ack: true) do |delivery_info, message_properties, message|
             with(delivery_info: delivery_info, message_properties: message_properties,
@@ -159,36 +151,20 @@ module Pika
     end
 
     def publish(message, opts = message_properties)
-      options = if opts.is_a?(Bunny::MessageProperties)
-        opts.to_hash
-      elsif opts.nil?
-        {}
-      else
-        opts
+      run_callbacks(:publish) do
+        options = if opts.is_a?(Bunny::MessageProperties)
+          opts.to_hash
+        elsif opts.nil?
+          {}
+        else
+          opts
+        end
+
+        options.fetch(:routing_key) { options[:routing_key] = name }
+        options.fetch(:correlation_id) { options[:correlation_id] = Digest::UUID.uuid_v4 }
+
+        exchange.publish(Oj.dump(message, mode: :strict), options)
       end
-
-      options.fetch(:routing_key) { options[:routing_key] = name }
-      options.fetch(:correlation_id) { options[:correlation_id] = Digest::UUID.uuid_v4 }
-
-      exchange.publish(Oj.dump(message, mode: :strict), options)
-    end
-
-    def before_acknowledge
-    end
-
-    def after_acknowledge(*args)
-    end
-
-    def before_perform
-    end
-
-    def after_perform(*args)
-    end
-
-    def before_reject
-    end
-
-    def after_reject(*args)
     end
   end
 end

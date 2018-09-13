@@ -1,9 +1,9 @@
 require 'pika/graph'
 require 'pika/hash'
 require 'pika/message'
-require 'pika/task'
 require 'pika/rfc'
 require 'pika/runner'
+require 'pika/task'
 
 module Pika
   class << self

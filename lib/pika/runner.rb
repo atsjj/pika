@@ -93,7 +93,7 @@ module Pika
       lock = Mutex.new
       keys = container.keys & (only || container.keys) - (except || [])
 
-      instances = keys.map { |k| puts k; container.resolve(k).bind }
+      instances = keys.map { |k| container.resolve(k).bind }
       instances.each(&:subscribe)
 
       %w[INT QUIT TERM USR1].each do |signal|
@@ -109,8 +109,6 @@ module Pika
 
           instances.each { |task| task.channel.close }
           instances.each { |task| task.connection.close }
-
-          puts "#{Signal.signame(condition_received)}: Exiting..."
         end
       end.join
     end
