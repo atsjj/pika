@@ -150,14 +150,14 @@ module Pika
       end
     end
 
-    def publish(message, opts = message_properties)
+    def publish(message, opts = nil)
       run_callbacks(:publish) do
         options = if opts.is_a?(Bunny::MessageProperties)
           opts.to_hash
         elsif opts.nil?
-          {}
+          message_properties.to_hash
         else
-          opts
+          message_properties.to_hash.merge(opts)
         end
 
         options.fetch(:routing_key) { options[:routing_key] = name }
