@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'dry-configurable', '~> 0.7.0'
   spec.add_dependency 'dry-container', '~> 0.6.0'
   spec.add_dependency 'dry-core', '~> 0.4.7'
-  spec.add_dependency 'dry-initializer', '~> 2.5'
+  spec.add_dependency 'dry-initializer', '~> 2.5.0'
   spec.add_dependency 'oj', '~> 3.0', '>= 3.0.6'
 
   spec.add_development_dependency 'bundler'
