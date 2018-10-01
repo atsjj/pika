@@ -21,14 +21,6 @@ module Pika
       }.call
     end
 
-    def channel
-      @channel ||= connection.create_channel
-    end
-
-    def exchange
-      @exchange ||= channel.topic(exchange_name, auto_delete: false)
-    end
-
     def call(message, opts = {})
       options = if opts.is_a?(Bunny::MessageProperties)
         opts.to_hash
@@ -41,14 +33,14 @@ module Pika
       options.fetch(:routing_key) { options[:routing_key] = routing_key }
       options.fetch(:correlation_id) { options[:correlation_id] = Digest::UUID.uuid_v4 }
 
-      exchange.publish(Oj.dump(message, mode: :strict), options)
+      connection.with_channel do |channel|
+        channel.topic(exchange_name)
+          .publish(Oj.dump(message, mode: :strict), options)
+      end
     ensure
-      channel.close
       connection.close
 
-      @channel = nil
       @connection = nil
-      @exchange = nil
     end
   end
 end

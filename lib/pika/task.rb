@@ -77,7 +77,7 @@ module Pika
       if channel.nil?
         nil
       else
-        channel.topic(channel_name, auto_delete: false)
+        channel.topic(channel_name)
       end
     }
 
@@ -86,8 +86,7 @@ module Pika
         if channel.nil? || exchange.nil?
           nil
         else
-          channel.queue(queue_name, auto_delete: false)
-            .bind(exchange, routing_key: routing_key)
+          channel.queue(queue_name).bind(exchange, routing_key: routing_key)
         end
       else
         nil
@@ -126,15 +125,11 @@ module Pika
         rescue => exception
           reject
 
-          logger.error({
-            task: name,
-            message: exception.message,
-            backtrace: exception.backtrace,
-            arguments: [{
-              delivery_info: delivery_info,
-              message_properties: message_properties
-            }]
-          })
+          logger.error('task', name)
+          logger.error(exception.backtrace.join("\n"))
+          logger.error('message', message)
+          logger.error('arguments(delivery_info)', delivery_info)
+          logger.error('arguments(message_properties)', message_properties)
         end
       end
     end
