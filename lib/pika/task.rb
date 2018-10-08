@@ -1,22 +1,26 @@
 require 'bunny'
 require 'dry/core/class_attributes'
+require 'dry/core/constants'
 require 'dry/core/inflector'
 require 'oj'
 require 'pika/callbacks'
 require 'pika/initializer'
 require 'pika/log_subscriber'
 require 'pika/logging'
+require 'pika/message_properties'
 require 'pika/mode'
 
 module Pika
   class Task
     extend Initializer
     extend Dry::Core::ClassAttributes
+    include Dry::Core::Constants
     include Callbacks
     include Logging
 
     defines :channel_name, :logger, :max_retries, :modes, :prefetch,
-            :queue_name, :requeue_on_rejection, :routing_key, :verbose_event_logs
+            :queue_name, :requeue_on_rejection, :routing_key,
+            :verbose_event_logs
 
     class << self
       def default_name
@@ -57,9 +61,7 @@ module Pika
 
     option :message, default: -> { {} }
 
-    option :message_properties, default: -> {
-      Bunny::MessageProperties.new({ correlation_id: Digest::UUID.uuid_v4 })
-    }
+    option :message_properties, default: -> { Pika::MessageProperties.new }
 
     option :modes, default: -> { Mode.new(self.class.modes) }
 
@@ -138,27 +140,35 @@ module Pika
       run_callbacks(:subscribe) do
         if modes.rx?
           queue.subscribe(manual_ack: true) do |delivery_info, message_properties, message|
-            with(delivery_info: delivery_info, message_properties: message_properties,
+            with(delivery_info: delivery_info,
+              message_properties: Pika::MessageProperties.new(message_properties),
               message: Oj.strict_load(message)).call
           end
         end
       end
     end
 
-    def publish(message, opts = nil)
+    def publish_options(opts = EMPTY_HASH)
+      options = message_properties.with(opts)
+
+      if !opts.key?(:routing_key) || options.routing_key.equal?(EMPTY_STRING)
+        options = options.with(routing_key: name)
+      end
+
+      if !opts.key?(:from) || options.headers.pika.from.equal?(EMPTY_STRING)
+        options = options.with(from: name)
+      end
+
+      if !opts.key?(:as) || options.headers.pika.as.equal?(EMPTY_STRING)
+        options = options.with(as: name)
+      end
+
+      options
+    end
+
+    def publish(message, opts = EMPTY_HASH)
       run_callbacks(:publish) do
-        options = if opts.is_a?(Bunny::MessageProperties)
-          opts.to_hash
-        elsif opts.nil?
-          message_properties.to_hash
-        else
-          message_properties.to_hash.merge(opts)
-        end
-
-        options.fetch(:routing_key) { options[:routing_key] = name }
-        options.fetch(:correlation_id) { options[:correlation_id] = Digest::UUID.uuid_v4 }
-
-        exchange.publish(Oj.dump(message, mode: :strict), options)
+        exchange.publish(Oj.dump(message, mode: :strict), publish_options(opts).to_h)
       end
     end
   end

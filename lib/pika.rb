@@ -1,3 +1,4 @@
+require 'dry/struct'
 require 'pika/graph'
 require 'pika/hash'
 require 'pika/message'
