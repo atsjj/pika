@@ -25,7 +25,7 @@ module Pika
     class << self
       def default_name
         Dry::Core::Inflector.underscore(name.to_s.gsub('Task', ''))
-          .tr('/', '_').tr('_', '.')
+          .tr('/', '.')
       end
     end
 
