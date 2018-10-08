@@ -136,6 +136,39 @@ module Pika
       end
     end
 
+    def sync(*args)
+      raise "a block must be given" unless block_given?
+
+      value = nil
+
+      connection.with_channel do |tmp_channel|
+        _correlation_id = Digest::UUID.uuid_v4
+        tmp_queue = tmp_channel.temporary_queue
+        options = publish_options(cc: tmp_queue.name, correlation_id: _correlation_id)
+        instance = with(connection: connection, channel: tmp_channel, message_properties: options)
+        condition = ConditionVariable.new
+        lock = Mutex.new
+
+        tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
+          _message_properties = Pika::MessageProperties.new(tmp_message_properties)
+          _task = Pika.env.resolve(_message_properties.from)
+          _task_instance = _task.with(delivery_info: tmp_delivery_info,
+            message_properties: _message_properties,
+            message: Oj.strict_load(tmp_message))
+
+          value = yield(condition, _task_instance)
+        end
+
+        instance.call(*args)
+
+        lock.synchronize do
+          condition.wait(lock)
+        end
+      end
+
+      value
+    end
+
     def subscribe
       run_callbacks(:subscribe) do
         if modes.rx?
