@@ -127,11 +127,11 @@ module Pika
         rescue => exception
           reject
 
-          logger.error('task', name)
+          logger.error("task #{name}, #{exception.inspect}")
           logger.error(exception.backtrace.join("\n"))
-          logger.error('message', message)
-          logger.error('arguments(delivery_info)', delivery_info)
-          logger.error('arguments(message_properties)', message_properties)
+          logger.error("message #{message}")
+          logger.error("arguments(delivery_info) #{delivery_info}")
+          logger.error("arguments(message_properties) #{message_properties}")
         end
       end
     end
