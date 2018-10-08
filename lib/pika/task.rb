@@ -151,7 +151,13 @@ module Pika
 
         tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
           _message_properties = Pika::MessageProperties.new(tmp_message_properties)
-          _task = Pika.env.resolve(_message_properties.from)
+
+          _task = if Pika.env.key?(_message_properties.from)
+            Pika.env.resolve(_message_properties.from)
+          else
+            Pika::Task.new(name: _message_properties.from)
+          end
+
           _task_instance = _task.with(delivery_info: tmp_delivery_info,
             message_properties: _message_properties,
             message: Oj.strict_load(tmp_message))
