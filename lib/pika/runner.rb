@@ -91,7 +91,24 @@ module Pika
       condition = ConditionVariable.new
       condition_received = nil
       lock = Mutex.new
-      keys = container.keys & (only || container.keys) - (except || [])
+
+      _only = [only]
+        .flatten
+        .map { |k| k.is_a?(Regexp) ? container.keys.grep(k) : k }
+        .flatten
+        .reject { |k| k.nil? }
+
+      if _only.count == 0
+        _only = container.keys
+      end
+
+      _except = [except]
+        .flatten
+        .map { |k| k.is_a?(Regexp) ? container.keys.grep(k) : k }
+        .flatten
+        .reject { |k| k.nil? }
+
+      keys = container.keys & _only - _except
 
       instances = keys.map { |k| container.resolve(k).bind }
       instances.each(&:subscribe)
