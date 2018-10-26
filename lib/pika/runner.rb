@@ -56,7 +56,7 @@ module Pika
             .camelize(name))
 
         [key, value]
-      end
+      end.reject { |(k, v)| v.abstract? }
     end
 
     def load_channels(into = Dry::Container.new)
@@ -65,6 +65,7 @@ module Pika
         channel.prefetch(v.prefetch)
 
         container.register(k, channel)
+
         container
       end
     end

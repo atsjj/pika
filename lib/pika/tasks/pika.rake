@@ -15,7 +15,7 @@ namespace :pika do
 
   # desc 'Runs all tasks within the app/tasks folder'
   task runner: :environment do
-    Pika.instance.call(except: ['application'])
+    Pika.instance.call
   end
 
   # desc 'Runs after pika:runner'

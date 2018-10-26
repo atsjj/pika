@@ -23,6 +23,20 @@ module Pika
             :verbose_event_logs
 
     class << self
+      def inherited(subclass)
+        super(subclass)
+
+        subclass.abstract(false)
+      end
+
+      def abstract(value = true)
+        @abstract = value
+      end
+
+      def abstract?
+        @abstract
+      end
+
       def default_name
         Dry::Core::Inflector.underscore(name.to_s.gsub('Task', ''))
           .tr('/', '.')
