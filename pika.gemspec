@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'dry-struct', '~> 0.5.1'
   spec.add_dependency 'dry-types', '~> 0.13.2'
   spec.add_dependency 'oj', '~> 3.0', '>= 3.0.6'
+  spec.add_dependency 'stud', '~> 0.0.23'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'

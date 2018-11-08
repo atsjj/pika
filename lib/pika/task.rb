@@ -9,6 +9,7 @@ require 'pika/log_subscriber'
 require 'pika/logging'
 require 'pika/message_properties'
 require 'pika/mode'
+require 'stud/trap'
 
 module Pika
   class Task
@@ -153,6 +154,7 @@ module Pika
     def sync(*args)
       raise "a block must be given" unless block_given?
 
+      traps = [['INT', nil], ['QUIT', nil], ['TERM', nil], ['USR1', nil]]
       exception = nil
       value = nil
 
@@ -164,7 +166,7 @@ module Pika
         condition = ConditionVariable.new
         lock = Mutex.new
 
-        tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
+        consumer = tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
           _message_properties = Pika::MessageProperties.new(tmp_message_properties)
 
           if _message_properties.type == 'error'
@@ -192,11 +194,25 @@ module Pika
           end
         end
 
+        traps.map! do |(signal, id)|
+          id = Stud.trap(signal) do |number|
+            consumer.cancel
+
+            exception = RuntimeError.new("Exiting #{number}")
+
+            condition.signal
+          end
+        end
+
         instance.call(*args)
 
         lock.synchronize do
           condition.wait(lock)
         end
+      end
+
+      traps.map! do |(signal, id)|
+        Stud.untrap(signal, id)
       end
 
       raise exception unless exception.nil?
