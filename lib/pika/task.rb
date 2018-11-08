@@ -153,6 +153,7 @@ module Pika
     def sync(*args)
       raise "a block must be given" unless block_given?
 
+      exception = nil
       value = nil
 
       connection.with_channel do |tmp_channel|
@@ -166,17 +167,29 @@ module Pika
         tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
           _message_properties = Pika::MessageProperties.new(tmp_message_properties)
 
-          _task = if Pika.env.key?(_message_properties.from)
-            Pika.env.resolve(_message_properties.from)
+          if _message_properties.type == 'error'
+            error = Oj.strict_load(tmp_message)
+              .fetch(_message_properties.from) {
+                Hash['message', '', 'backtrace', []]
+              }
+
+            exception = RuntimeError.new(error.fetch('message'))
+            exception.set_backtrace(error.fetch('backtrace'))
+
+            condition.signal
           else
-            Pika::Task.new(name: _message_properties.from)
+            _task = if Pika.env.key?(_message_properties.from)
+              Pika.env.resolve(_message_properties.from)
+            else
+              Pika::Task.new(name: _message_properties.from)
+            end
+
+            _task_instance = _task.with(delivery_info: tmp_delivery_info,
+              message_properties: _message_properties,
+              message: Oj.strict_load(tmp_message))
+
+            value = yield(condition, _task_instance)
           end
-
-          _task_instance = _task.with(delivery_info: tmp_delivery_info,
-            message_properties: _message_properties,
-            message: Oj.strict_load(tmp_message))
-
-          value = yield(condition, _task_instance)
         end
 
         instance.call(*args)
@@ -185,6 +198,8 @@ module Pika
           condition.wait(lock)
         end
       end
+
+      raise exception unless exception.nil?
 
       value
     end
