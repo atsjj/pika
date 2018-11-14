@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'bunny', '~> 2.9', '>= 2.9.2'
+  spec.add_dependency 'concurrent-ruby', '~> 1.1', '>= 1.1.3'
   spec.add_dependency 'dry-configurable', '~> 0.7.0'
   spec.add_dependency 'dry-container', '~> 0.6.0'
   spec.add_dependency 'dry-core', '~> 0.4.7'

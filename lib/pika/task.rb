@@ -1,4 +1,5 @@
 require 'bunny'
+require 'concurrent-ruby'
 require 'dry/core/class_attributes'
 require 'dry/core/constants'
 require 'dry/core/inflector'
@@ -151,73 +152,55 @@ module Pika
       end
     end
 
-    def sync(*args)
+    def sync(*args, &block)
       raise "a block must be given" unless block_given?
 
-      traps = [['INT', nil], ['QUIT', nil], ['TERM', nil], ['USR1', nil]]
-      exception = nil
-      value = nil
+      Concurrent::Promises.future(args, self, connection, block) do |t_args, b_task, t_connection, t_block|
+        f_value = nil
 
-      connection.with_channel do |tmp_channel|
-        _correlation_id = Digest::UUID.uuid_v4
-        tmp_queue = tmp_channel.temporary_queue
-        options = publish_options(cc: tmp_queue.name, correlation_id: _correlation_id)
-        instance = with(connection: connection, channel: tmp_channel, message_properties: options)
-        condition = ConditionVariable.new
-        lock = Mutex.new
+        t_connection.with_channel do |t_channel|
+          t_correlation_id = Digest::UUID.uuid_v4
+          t_queue = t_channel.temporary_queue
+          t_options = b_task.publish_options(cc: t_queue.name, correlation_id: t_correlation_id)
+          t_instance = b_task.with(connection: t_connection, channel: t_channel, message_properties: t_options)
+          t_instance.call(*t_args)
+          t_consumer = t_queue.subscribe(block: true) do |b_delivery_info, b_message_properties, b_message|
+            t_message_properties = Pika::MessageProperties.new(b_message_properties)
 
-        consumer = tmp_queue.subscribe do |tmp_delivery_info, tmp_message_properties, tmp_message|
-          _message_properties = Pika::MessageProperties.new(tmp_message_properties)
+            if t_message_properties == 'error'
+              t_error = Oj.strict_load(tmp_message)
+                .fetch(_message_properties.from) {
+                  Hash['message', '', 'backtrace', []]
+                }
 
-          if _message_properties.type == 'error'
-            error = Oj.strict_load(tmp_message)
-              .fetch(_message_properties.from) {
-                Hash['message', '', 'backtrace', []]
-              }
+              t_exception = RuntimeError.new(t_error.fetch('message'))
+              t_exception.set_backtrace(t_error.fetch('backtrace'))
 
-            exception = RuntimeError.new(error.fetch('message'))
-            exception.set_backtrace(error.fetch('backtrace'))
-
-            condition.signal
-          else
-            _task = if Pika.env.key?(_message_properties.from)
-              Pika.env.resolve(_message_properties.from)
+              raise t_exception
             else
-              Pika::Task.new(name: _message_properties.from)
+              t_task = if Pika.env.key?(t_message_properties.from)
+                Pika.env.resolve(t_message_properties.from)
+              else
+                Pika::Task.new(name: t_message_properties.from)
+              end
+
+              t_task_instance = t_task.with(delivery_info: b_delivery_info,
+                message_properties: t_message_properties,
+                message: Oj.strict_load(b_message))
+
+              t_value = t_block.call(t_task_instance)
+
+              unless t_value.nil?
+                f_value = t_value
+
+                t_channel.close
+              end
             end
-
-            _task_instance = _task.with(delivery_info: tmp_delivery_info,
-              message_properties: _message_properties,
-              message: Oj.strict_load(tmp_message))
-
-            value = yield(condition, _task_instance)
           end
         end
 
-        traps.map! do |(signal, id)|
-          id = Stud.trap(signal) do |number|
-            consumer.cancel
-
-            exception = RuntimeError.new("Exiting #{number}")
-
-            condition.signal
-          end
-        end
-
-        instance.call(*args)
-
-        lock.synchronize do
-          condition.wait(lock)
-        end
-      end
-
-      traps.map! do |(signal, id)|
-        Stud.untrap(signal, id)
-      end
-
-      raise exception unless exception.nil?
-
-      value
+        f_value
+      end.value!
     end
 
     def subscribe
