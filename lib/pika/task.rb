@@ -159,6 +159,14 @@ module Pika
         f_value = nil
 
         t_connection.with_channel do |t_channel|
+          ['INT', 'QUIT', 'TERM', 'USR1'].each do |signal|
+            Signal.trap(signal) do |code|
+              t_channel.try(:close)
+
+              raise "Exiting #{signal} #{code}"
+            end
+          end
+
           t_correlation_id = Digest::UUID.uuid_v4
           t_queue = t_channel.temporary_queue
           t_options = b_task.publish_options(cc: t_queue.name, correlation_id: t_correlation_id)
