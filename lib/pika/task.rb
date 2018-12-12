@@ -168,7 +168,7 @@ module Pika
           end
 
           t_correlation_id = Digest::UUID.uuid_v4
-          t_queue = t_channel.temporary_queue
+          t_queue = t_channel.temporary_queue(auto_delete: true, exclusive: true)
           t_options = b_task.publish_options(cc: t_queue.name, correlation_id: t_correlation_id)
           t_instance = b_task.with(connection: t_connection, channel: t_channel, message_properties: t_options)
           t_instance.call(*t_args)
