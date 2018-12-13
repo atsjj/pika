@@ -104,7 +104,9 @@ module Pika
         if channel.nil? || exchange.nil?
           nil
         else
-          channel.queue(queue_name).bind(exchange, routing_key: routing_key)
+          channel
+            .queue(queue_name, auto_delete: true)
+            .bind(exchange, routing_key: routing_key)
         end
       else
         nil

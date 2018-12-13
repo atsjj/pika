@@ -25,7 +25,7 @@ module Pika
     end
 
     def response_queue
-      @response_queue ||= channel.queue('', exclusive: true)
+      @response_queue ||= channel.queue('', auto_delete: true, exclusive: true)
     end
 
     def exchange
