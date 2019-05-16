@@ -1,6 +1,6 @@
 require 'active_support/core_ext/digest/uuid'
 require 'bunny'
-require 'dry-initializer'
+require 'dry/initializer'
 require 'oj'
 
 module Pika

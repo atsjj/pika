@@ -10,7 +10,6 @@ require 'pika/log_subscriber'
 require 'pika/logging'
 require 'pika/message_properties'
 require 'pika/mode'
-require 'stud/trap'
 
 module Pika
   class Task
