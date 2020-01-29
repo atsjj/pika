@@ -1,5 +1,5 @@
+require 'pika'
 require 'rake'
-require 'pika/runner'
 
 namespace :pika do
   # desc 'Runs before pika:runner'

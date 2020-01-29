@@ -5,30 +5,27 @@ require 'pika/version'
 Gem::Specification.new do |spec|
   spec.name          = 'pika'
   spec.version       = Pika::VERSION
-  spec.authors       = ['Steve Jabour', 'Michael Harrison']
-  spec.email         = ['steve@jabour.me', 'mike.harrison@summit.com']
   spec.summary       = 'A gem based on the PSL pika library'
   spec.homepage      = 'http://github.com/atsjj/pika'
-
   spec.license       = 'MIT'
-
-  spec.files         = `git ls-files -z`.split("\x0")
-  # spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  # spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.authors       = ['Steve Jabour']
+  spec.email         = ['steve@jabour.me']
+  spec.files         = Dir['lib/**/*', 'Rakefile']
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'bunny', '~> 2.9', '>= 2.9.2'
-  spec.add_dependency 'concurrent-ruby', '~> 1.1', '>= 1.1.3'
-  spec.add_dependency 'dry-configurable', '~> 0.8.2'
-  spec.add_dependency 'dry-container', '~> 0.7.0'
-  spec.add_dependency 'dry-core', '~> 0.4.7'
-  spec.add_dependency 'dry-initializer', '~> 3.0.1'
-  spec.add_dependency 'dry-struct', '~> 1.0.0'
-  spec.add_dependency 'dry-types', '~> 1.0.0'
-  spec.add_dependency 'oj', '~> 3.7', '>= 3.7.12'
+  spec.add_development_dependency 'bundler', '~> 2.0'
+  spec.add_development_dependency 'rake', '~> 10.0'
+  spec.add_development_dependency 'minitest', '~> 5.0'
 
-  spec.add_development_dependency 'bundler'
-  spec.add_development_dependency 'rake'
-
-  spec.add_runtime_dependency 'railties'
+  spec.add_runtime_dependency 'activesupport', '~> 6.0.0', '>= 6.0.0'
+  spec.add_runtime_dependency 'bunny', '~> 2.14.1', '>= 2.14.1'
+  spec.add_runtime_dependency 'concurrent-ruby', '~> 1.1.0', '>= 1.1.0'
+  spec.add_runtime_dependency 'dry-configurable', '~> 0.8.0', '>= 0.8.0'
+  spec.add_runtime_dependency 'dry-container', '~> 0.7.0', '>= 0.7.0'
+  spec.add_runtime_dependency 'dry-core', '~> 0.4.0', '>= 0.4.0'
+  spec.add_runtime_dependency 'dry-initializer', '~> 3.0.0', '>= 3.0.0'
+  spec.add_runtime_dependency 'dry-struct', '~> 1.2.0', '>= 1.2.0'
+  spec.add_runtime_dependency 'dry-types', '~> 1.2.0', '>= 1.2.0'
+  spec.add_runtime_dependency 'oj', '~> 3.10.0', '>= 3.10.0'
+  spec.add_runtime_dependency 'railties', '~> 6.0.0', '>= 6.0.0'
 end

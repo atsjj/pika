@@ -1,11 +1,13 @@
 require 'active_support/core_ext/digest/uuid'
 require 'bunny'
+require 'dry/core/constants'
 require 'dry/initializer'
 require 'oj'
 
 module Pika
   class Rfc
     extend Dry::Initializer
+    include Dry::Core::Constants
 
     attr_accessor :response
 
@@ -13,11 +15,10 @@ module Pika
     param :queue
 
     def connection
-      @connection ||= -> {
-        c = Bunny.new(url.to_s)
-        c.start
-        c
-      }.call
+      @connection ||= Bunny.new(url.to_s).yield_self do |bunny|
+        bunny.start
+        bunny
+      end
     end
 
     def channel
@@ -44,8 +45,8 @@ module Pika
       @condition ||= ConditionVariable.new
     end
 
-    def call(options = {})
-      Oj.default_options = {:mode => :strict }
+    def call(options = EMPTY_HASH)
+      Oj.default_options = Hash({ mode: :strict })
 
       instance = self
       json = Oj.dump(options)
@@ -65,8 +66,8 @@ module Pika
       response
     end
 
-    def execute(options = {})
-      call(options) || Oj.dump({})
+    def execute(options = EMPTY_HASH)
+      call(options) || Oj.dump(EMPTY_HASH)
     ensure
       channel.close
       connection.close

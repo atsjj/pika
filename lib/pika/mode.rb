@@ -1,5 +1,3 @@
-require 'pika/enum'
-
 module Pika
   class Mode < Enum
     attr_enum :rx, 1

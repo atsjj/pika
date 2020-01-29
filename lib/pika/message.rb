@@ -1,11 +1,13 @@
 require 'active_support/core_ext/digest/uuid'
 require 'bunny'
+require 'dry/core/constants'
 require 'dry/initializer'
 require 'oj'
 
 module Pika
   class Message
     extend Dry::Initializer
+    include Dry::Core::Constants
 
     attr_accessor :response
 
@@ -14,18 +16,17 @@ module Pika
     param :routing_key
 
     def connection
-      @connection ||= -> {
-        c = Bunny.new(url.to_s)
-        c.start
-        c
-      }.call
+      @connection ||= Bunny.new(url.to_s).yield_self do |bunny|
+        bunny.start
+        bunny
+      end
     end
 
-    def call(message, opts = {})
+    def call(message, opts = EMPTY_HASH)
       options = if opts.is_a?(Bunny::MessageProperties)
         opts.to_hash
       elsif opts.nil?
-        {}
+        EMPTY_HASH
       else
         opts
       end

@@ -1,30 +1,22 @@
 require 'bunny'
-require 'dry/configurable'
+require 'dry/core/constants'
 require 'dry/container'
 require 'pathname'
 
 module Pika
   class Runner
     extend Initializer
-    extend Dry::Configurable
     extend Dry::Core::ClassAttributes
 
-    setting :amqp_url, '', reader: true
-
-    def amqp_url
-      self.class.amqp_url
-    end
-
     def connection
-      @connection ||= -> {
-        c = Bunny.new(amqp_url)
-        c.start
-        c
-      }.call
+      @connection ||= Bunny.new(Pika.config.amqp_url).yield_self do |bunny|
+        bunny.start
+        bunny
+      end
     end
 
     def directory
-      Rails.root.join('app', 'tasks')
+      Pika.config.tasks.root
     end
 
     def tasks

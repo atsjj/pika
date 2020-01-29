@@ -1,44 +1,10 @@
 require 'active_support/core_ext/digest/uuid'
 require 'dry/core/constants'
-require 'pika/types'
 
 module Pika
-  class Struct < Dry::Struct
-    class << self
-      def with(*args)
-        new(*args)
-      end
-    end
-
-    alias_method :with, :new
-
-    transform_keys(&:to_sym)
-
-    transform_types do |type|
-      if type.default?
-        type.constructor do |value|
-          value.nil? ? Dry::Types::Undefined : value
-        end
-      else
-        type
-      end
-    end
-  end
-
-  class MessagePropertiesHeadersPika < Struct
+  class MessageProperties < Struct
     include Dry::Core::Constants
 
-    attribute :from, Types::Coercible::String.default(EMPTY_STRING)
-    attribute :as, Types::Coercible::String.default(EMPTY_STRING)
-    attribute :cc, Types::Coercible::String.default(EMPTY_STRING)
-    attribute :record_id, Types::Coercible::String.default(EMPTY_STRING)
-  end
-
-  class MessagePropertiesHeaders < Struct
-    attribute :pika, MessagePropertiesHeadersPika.default(MessagePropertiesHeadersPika.new)
-  end
-
-  class MessageProperties < Struct
     class << self
       def new(attributes = EMPTY_HASH)
         instance = attributes.equal?(EMPTY_HASH) ? super() : super(attributes)

@@ -4,12 +4,6 @@ require 'dry/core/class_attributes'
 require 'dry/core/constants'
 require 'dry/core/inflector'
 require 'oj'
-require 'pika/callbacks'
-require 'pika/initializer'
-require 'pika/log_subscriber'
-require 'pika/logging'
-require 'pika/message_properties'
-require 'pika/mode'
 
 module Pika
   class Task
@@ -74,9 +68,9 @@ module Pika
 
     option :max_retries, default: -> { self.class.max_retries }
 
-    option :message, default: -> { {} }
+    option :message, default: -> { EMPTY_HASH }
 
-    option :message_properties, default: -> { Pika::MessageProperties.new }
+    option :message_properties, default: -> { MessageProperties.new }
 
     option :modes, default: -> { Mode.new(self.class.modes) }
 
@@ -174,12 +168,15 @@ module Pika
           t_instance = b_task.with(connection: t_connection, channel: t_channel, message_properties: t_options)
           t_instance.call(*t_args)
           t_consumer = t_queue.subscribe(block: true) do |b_delivery_info, b_message_properties, b_message|
-            t_message_properties = Pika::MessageProperties.new(b_message_properties)
+            t_message_properties = MessageProperties.new(b_message_properties)
 
             if t_message_properties == 'error'
               t_error = Oj.strict_load(tmp_message)
                 .fetch(_message_properties.from) {
-                  Hash['message', '', 'backtrace', []]
+                  Hash({
+                    'message' => EMPTY_STRING,
+                    'backtrace' => EMPTY_ARRAY,
+                  })
                 }
 
               t_exception = RuntimeError.new(t_error.fetch('message'))
@@ -190,7 +187,7 @@ module Pika
               t_task = if Pika.env.key?(t_message_properties.from)
                 Pika.env.resolve(t_message_properties.from)
               else
-                Pika::Task.new(name: t_message_properties.from)
+                Task.new(name: t_message_properties.from)
               end
 
               t_task_instance = t_task.with(delivery_info: b_delivery_info,
@@ -217,7 +214,7 @@ module Pika
         if modes.rx?
           queue.subscribe(manual_ack: true) do |delivery_info, message_properties, message|
             with(delivery_info: delivery_info,
-              message_properties: Pika::MessageProperties.new(message_properties),
+              message_properties: MessageProperties.new(message_properties),
               message: Oj.strict_load(message)).call
           end
         end
