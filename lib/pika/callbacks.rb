@@ -1,3 +1,4 @@
+require 'active_support/callbacks'
 require 'active_support/concern'
 
 module Pika
