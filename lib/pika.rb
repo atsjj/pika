@@ -1,6 +1,6 @@
 require 'active_support'
 
-module Peak
+module Pika
   extend ActiveSupport::Autoload
 
   autoload :Callbacks
