@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'minitest', '~> 5.0'
 
-  spec.add_runtime_dependency 'activesupport', '~> 6.0.0', '>= 6.0.0'
+  spec.add_runtime_dependency 'activesupport', '~> 5.0.0', '>= 5.0.0'
   spec.add_runtime_dependency 'bunny', '~> 2.14.1', '>= 2.14.1'
   spec.add_runtime_dependency 'concurrent-ruby', '~> 1.1.0', '>= 1.1.0'
   spec.add_runtime_dependency 'dry-configurable', '~> 0.8.0', '>= 0.8.0'
@@ -27,5 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'dry-struct', '~> 1.2.0', '>= 1.2.0'
   spec.add_runtime_dependency 'dry-types', '~> 1.2.0', '>= 1.2.0'
   spec.add_runtime_dependency 'oj', '~> 3.10.0', '>= 3.10.0'
-  spec.add_runtime_dependency 'railties', '~> 6.0.0', '>= 6.0.0'
+  spec.add_runtime_dependency 'railties', '~> 5.0.0', '>= 5.0.0'
 end
