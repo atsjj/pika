@@ -24,8 +24,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'dry-container', '~> 0.7.0', '>= 0.7.0'
   spec.add_runtime_dependency 'dry-core', '~> 0.4.0', '>= 0.4.0'
   spec.add_runtime_dependency 'dry-initializer', '~> 3.0.0', '>= 3.0.0'
-  spec.add_runtime_dependency 'dry-struct', '~> 1.2.0', '>= 1.2.0'
-  spec.add_runtime_dependency 'dry-types', '~> 1.2.0', '>= 1.2.0'
+  spec.add_runtime_dependency 'dry-struct', '~> 1.3.0', '>= 1.3.0'
+  spec.add_runtime_dependency 'dry-types', '~> 1.3.0', '>= 1.3.0'
   spec.add_runtime_dependency 'oj', '~> 3.10.0', '>= 3.10.0'
   spec.add_runtime_dependency 'railties', '~> 5.2.0', '>= 5.2.0'
 end
