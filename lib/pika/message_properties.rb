@@ -10,6 +10,10 @@ module Pika
         instance = attributes.equal?(EMPTY_HASH) ? super() : super(attributes)
         options = attributes.to_h.deep_merge(instance.to_h)
 
+        unless options.key?(:correlation_id)
+          options[:correlation_id] = Digest::UUID.uuid_v4
+        end
+
         if options.key?(:from)
           options[:headers][:pika][:from] = options.delete(:from)
         end
@@ -34,13 +38,13 @@ module Pika
     attribute :cluster_id, Types::Coercible::String.meta(omittable: true)
     attribute :content_encoding, Types::Coercible::String.meta(omittable: true)
     attribute :content_type, Types::Coercible::String.meta(omittable: true)
-    attribute :correlation_id, Types::Coercible::String.default(Digest::UUID.uuid_v4)
+    attribute :correlation_id, Types::Coercible::String.default(EMPTY_STRING)
     attribute :delivery_mode, Types::Coercible::Integer.meta(omittable: true)
     attribute :expiration, Types::Coercible::String.meta(omittable: true)
-    attribute :headers, MessagePropertiesHeaders.default(MessagePropertiesHeaders.new)
+    attribute :headers, MessagePropertiesHeaders.default(MessagePropertiesHeaders.new.freeze)
     attribute :message_id, Types::Coercible::String.meta(omittable: true)
     attribute :priority, Types::Coercible::Integer.meta(omittable: true)
-    attribute :reply_to, Types::Coercible::String.default('')
+    attribute :reply_to, Types::Coercible::String.default(EMPTY_STRING)
     attribute :routing_key, Types::Coercible::String.default(EMPTY_STRING)
     attribute :timestamp, Types::Coercible::Integer.meta(omittable: true)
     attribute :type, Types::Coercible::String.meta(omittable: true)
