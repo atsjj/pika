@@ -8,6 +8,7 @@ module Pika
   autoload :Enum
   autoload :Graph
   autoload :Hash
+  autoload :Initializer
   autoload :Logging
   autoload :LogSubscriber
   autoload :Message
