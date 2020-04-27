@@ -7,7 +7,7 @@ module Pika
     end
 
     rake_tasks do
-      Dir.glob("#{File.expand_path(__dir__)}/tasks/**/*.rake").each { |f| load f }
+      load 'pika/tasks/pika.rake'
     end
   end
 end

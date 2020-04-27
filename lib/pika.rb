@@ -15,7 +15,6 @@ module Pika
   autoload :MessagePropertiesHeaders
   autoload :MessagePropertiesHeadersPika
   autoload :Mode
-  autoload :Railtie
   autoload :Rfc
   autoload :Runner
   autoload :Struct
@@ -37,3 +36,5 @@ module Pika
     end
   end
 end
+
+require 'pika/railtie' if defined?(Rails::Railtie)
